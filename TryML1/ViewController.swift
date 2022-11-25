@@ -24,6 +24,42 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
 
     @IBAction func addButtonTapped(_ sender: Any) {
+        
+        present(imagePicker, animated: true)
+        
+        
+    }
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        if let userPickedImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
+            imageView.image = userPickedImage
+            
+            guard let ciimage = CIImage(image: userPickedImage) else {return}
+            
+            
+            detectImage(image: ciimage)
+        }
+        imagePicker.dismiss(animated: true)
+        
+    }
+    
+    func detectImage(image: CIImage){
+        let config = MLModelConfiguration()
+        guard let model = try? VNCoreMLModel(for: DogCatRabbitMLTry_1.init(configuration: config).model) else {return}
+        
+        let request = VNCoreMLRequest(model: model) { (request, error) in
+            guard let results = request.results as? [VNClassificationObservation] else {
+                    return
+                
+            }
+            print(results)
+        }
+        let handler = VNImageRequestHandler(ciImage: image)
+        do{
+            try handler.perform([request])
+        } catch {
+            print(error)
+        }
     }
     
 }
